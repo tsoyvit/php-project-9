@@ -7,12 +7,13 @@ jobs:
     name: PHP_CodeSniffer
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v2
+      - uses: actions/checkout@v3
       - name: Install PHP
         uses: shivammathur/setup-php@v2
         with:
-          php-version: '8.1'
+          php-version: '8.3'  # Изменено с 8.1 на 8.2
           tools: composer:v2
+          coverage: none
       - name: Install dependencies
         run: composer install --no-progress --prefer-dist
       - name: Run PHP_CodeSniffer
