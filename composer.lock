@@ -4,7 +4,7 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "f1f78ad7dc3548c92c9c39a01998d55c",
+    "content-hash": "fa0dde642e4cdbc795c4a81f4c81a0b1",
     "packages": [
         {
             "name": "carbonphp/carbon-doctrine-types",
@@ -1309,6 +1309,58 @@
             "time": "2019-03-08T08:55:37+00:00"
         },
         {
+            "name": "slim/flash",
+            "version": "0.4.0",
+            "source": {
+                "type": "git",
+                "url": "https://github.com/slimphp/Slim-Flash.git",
+                "reference": "9aaff5fded3b54f4e519ec3d4ac74d3d1f2cbbbc"
+            },
+            "dist": {
+                "type": "zip",
+                "url": "https://api.github.com/repos/slimphp/Slim-Flash/zipball/9aaff5fded3b54f4e519ec3d4ac74d3d1f2cbbbc",
+                "reference": "9aaff5fded3b54f4e519ec3d4ac74d3d1f2cbbbc",
+                "shasum": ""
+            },
+            "require": {
+                "php": ">=5.5.0"
+            },
+            "require-dev": {
+                "phpunit/phpunit": "^4.0"
+            },
+            "type": "library",
+            "autoload": {
+                "psr-4": {
+                    "Slim\\Flash\\": "src"
+                }
+            },
+            "notification-url": "https://packagist.org/downloads/",
+            "license": [
+                "MIT"
+            ],
+            "authors": [
+                {
+                    "name": "Josh Lockhart",
+                    "email": "hello@joshlockhart.com",
+                    "homepage": "http://joshlockhart.com"
+                }
+            ],
+            "description": "Slim Framework Flash message service provider",
+            "homepage": "http://slimframework.com",
+            "keywords": [
+                "flash",
+                "framework",
+                "message",
+                "provider",
+                "slim"
+            ],
+            "support": {
+                "issues": "https://github.com/slimphp/Slim-Flash/issues",
+                "source": "https://github.com/slimphp/Slim-Flash/tree/master"
+            },
+            "time": "2017-10-22T10:35:05+00:00"
+        },
+        {
             "name": "slim/http",
             "version": "1.4.0",
             "source": {
@@ -1385,6 +1437,62 @@
                 "source": "https://github.com/slimphp/Slim-Http/tree/1.4.0"
             },
             "time": "2024-06-24T18:27:41+00:00"
+        },
+        {
+            "name": "slim/php-view",
+            "version": "3.4.0",
+            "source": {
+                "type": "git",
+                "url": "https://github.com/slimphp/PHP-View.git",
+                "reference": "ef1821663a6a028b9e446e8c6818fd257bf70313"
+            },
+            "dist": {
+                "type": "zip",
+                "url": "https://api.github.com/repos/slimphp/PHP-View/zipball/ef1821663a6a028b9e446e8c6818fd257bf70313",
+                "reference": "ef1821663a6a028b9e446e8c6818fd257bf70313",
+                "shasum": ""
+            },
+            "require": {
+                "php": "^7.4 || ^8.0",
+                "psr/http-message": "^1.1 || ^2.0"
+            },
+            "require-dev": {
+                "phpstan/phpstan": "^1",
+                "phpunit/phpunit": "^9 || ^10",
+                "slim/psr7": "^1.6",
+                "squizlabs/php_codesniffer": "^3.10"
+            },
+            "type": "library",
+            "autoload": {
+                "psr-4": {
+                    "Slim\\Views\\": "src"
+                }
+            },
+            "notification-url": "https://packagist.org/downloads/",
+            "license": [
+                "MIT"
+            ],
+            "authors": [
+                {
+                    "name": "Glenn Eggleton",
+                    "email": "geggleto@gmail.com"
+                }
+            ],
+            "description": "Render PHP view scripts into a PSR-7 Response object.",
+            "keywords": [
+                "framework",
+                "php",
+                "phtml",
+                "renderer",
+                "slim",
+                "template",
+                "view"
+            ],
+            "support": {
+                "issues": "https://github.com/slimphp/PHP-View/issues",
+                "source": "https://github.com/slimphp/PHP-View/tree/3.4.0"
+            },
+            "time": "2024-07-19T18:54:54+00:00"
         },
         {
             "name": "slim/psr7",
@@ -2761,6 +2869,65 @@
                 }
             ],
             "time": "2025-02-13T08:34:43+00:00"
+        },
+        {
+            "name": "vlucas/valitron",
+            "version": "v1.4.11",
+            "source": {
+                "type": "git",
+                "url": "https://github.com/vlucas/valitron.git",
+                "reference": "fadce39f5f235755bb9794b2573af2d5bfcba85f"
+            },
+            "dist": {
+                "type": "zip",
+                "url": "https://api.github.com/repos/vlucas/valitron/zipball/fadce39f5f235755bb9794b2573af2d5bfcba85f",
+                "reference": "fadce39f5f235755bb9794b2573af2d5bfcba85f",
+                "shasum": ""
+            },
+            "require": {
+                "php": ">=5.3.2"
+            },
+            "require-dev": {
+                "phpunit/phpunit": ">=4.8.35"
+            },
+            "suggest": {
+                "ext-mbstring": "It can support the multiple bytes string length."
+            },
+            "type": "library",
+            "autoload": {
+                "psr-4": {
+                    "Valitron\\": "src/Valitron"
+                }
+            },
+            "notification-url": "https://packagist.org/downloads/",
+            "license": [
+                "BSD-3-Clause"
+            ],
+            "authors": [
+                {
+                    "name": "Vance Lucas",
+                    "email": "vance@vancelucas.com",
+                    "homepage": "https://www.vancelucas.com"
+                }
+            ],
+            "description": "Simple, elegant, stand-alone validation library with NO dependencies",
+            "homepage": "https://github.com/vlucas/valitron",
+            "keywords": [
+                "valid",
+                "validation",
+                "validator"
+            ],
+            "support": {
+                "issues": "https://github.com/vlucas/valitron/issues",
+                "source": "https://github.com/vlucas/valitron/tree/v1.4.11"
+            },
+            "funding": [
+                {
+                    "url": "https://tidelift.com/funding/github/packagist/vlucas/valitron",
+                    "type": "tidelift"
+                }
+            ],
+            "time": "2022-10-14T11:54:24+00:00"
         },
         {
             "name": "voku/portable-ascii",
