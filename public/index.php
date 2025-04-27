@@ -11,7 +11,6 @@ use DI\Container;
 use Slim\Middleware\MethodOverrideMiddleware;
 use Illuminate\Support\Collection;
 
-
 require __DIR__ . '/../vendor/autoload.php';
 
 $container = new Container();
