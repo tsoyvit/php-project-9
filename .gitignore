@@ -1,0 +1,26 @@
+# Dependency directories
+/vendor/
+/composer.lock
+
+# Build artifacts
+/build/
+/coverage/
+/.phpunit.cache/
+.phpunit.result.cache
+
+# IDE specific files
+.idea/
+.vscode/
+*.swp
+*.swo
+
+# System files
+.DS_Store
+Thumbs.db
+
+# Local override files
+.env
+*.local
+
+# PHPUnit cache and logs
+/phpunit.xml.cache
