@@ -1,6 +1,5 @@
 # Dependency directories
 /vendor/
-/composer.lock
 
 # Build artifacts
 /build/
