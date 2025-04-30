@@ -65,7 +65,7 @@
                     <td><?= htmlspecialchars($lastCheck['id'] ?? '')  ?></td>
                     <td><a href="/urls/<?= htmlspecialchars($lastCheck['id'] ?? '')  ?>"><?= htmlspecialchars($lastCheck['name'] ?? '') ?></a></td>
                     <td><?= htmlspecialchars($lastCheck['created_at'] ?? '') ?></td>
-                    <td><?= htmlspecialchars($lastCheck['code']) ?></td>
+                    <td><?= htmlspecialchars($lastCheck['status_code'] ?? '') ?></td>
                 </tr>
                 <?php endforeach; ?>
                 </tbody>

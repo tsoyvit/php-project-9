@@ -5,7 +5,7 @@ namespace App;
 use Carbon\Carbon;
 use Monolog\Logger;
 
-class CheckRepository
+class UrlCheckRepository
 {
     private \PDO $pdo;
     private Logger $logger;
@@ -18,7 +18,7 @@ class CheckRepository
     public function getChecks(int $urlId, int $limit = 0): array
     {
         $checks = [];
-        $sql = "SELECT * FROM checks WHERE url_id = ? ORDER BY created_at DESC";
+        $sql = "SELECT * FROM url_checks WHERE url_id = ? ORDER BY created_at DESC";
         if ($limit > 0) {
             $sql .= " LIMIT ?";
             $stmt = $this->pdo->prepare($sql);
@@ -28,9 +28,9 @@ class CheckRepository
             $stmt->execute([$urlId]);
         }
         while ($row = $stmt->fetch()) {
-            $check = Check::fromArray([
+            $check = UrlCheck::fromArray([
                 'id' => $row['id'],
-                'code' => $row['code'],
+                'status_code' => $row['status_code'],
                 'h1' => $row['h1'],
                 'title' => $row['title'],
                 'description' => $row['description'],
@@ -44,11 +44,11 @@ class CheckRepository
     public function getLastChecks()
     {
         $lastChecks = [];
-        $sql = "SELECT urls.id, urls.name, c.created_at, c.code
+        $sql = "SELECT urls.id, urls.name, c.created_at, c.status_code
 FROM urls
     LEFT JOIN (
     SELECT DISTINCT ON (url_id) *
-    FROM checks
+    FROM url_checks
     ORDER BY url_id, created_at DESC) c ON urls.id = c.url_id
 ORDER BY c.created_at";
         $stmt = $this->pdo->prepare($sql);
@@ -59,7 +59,7 @@ ORDER BY c.created_at";
         return $lastChecks;
     }
 
-    public function saveCheck(Check $check): void
+    public function saveCheck(UrlCheck $check): void
     {
         if ($check->exists()) {
             $this->updateCheck($check);
@@ -68,14 +68,14 @@ ORDER BY c.created_at";
         }
     }
 
-    public function getCheckById(int $id): ?Check
+    public function getCheckById(int $id): ?UrlCheck
     {
-        $stmt = $this->pdo->prepare("SELECT * FROM checks WHERE id = :id");
+        $stmt = $this->pdo->prepare("SELECT * FROM url_checks WHERE id = :id");
         $stmt->execute(['id' => $id]);
         if ($row = $stmt->fetch()) {
-            return Check::fromArray([
+            return UrlCheck::fromArray([
                 'id' => $row['id'],
-                'code' => $row['code'],
+                'status_code' => $row['status_code'],
                 'h1' => $row['h1'],
                 'title' => $row['title'],
                 'description' => $row['description'],
@@ -85,35 +85,36 @@ ORDER BY c.created_at";
         return null;
     }
 
-    private function updateCheck(Check $check): void
+    private function updateCheck(UrlCheck $check): void
     {
-        $sql = "UPDATE checks SET code = :code, h1 = :h1, title = :title, description = :description WHERE id = :id";
+        $sql = "UPDATE url_checks 
+            SET status_code = :status_code, h1 = :h1, title = :title, description = :description WHERE id = :id";
         $stmt = $this->pdo->prepare($sql);
         $stmt->execute([
             'id' => $check->getId(),
-            'code' => $check->getCode(),
+            'status_code' => $check->getStatusCode(),
             'h1' => $check->getH1(),
             'title' => $check->getTitle(),
             'description' => $check->getDescription(),
         ]);
     }
 
-    public function deleteCheck(Check $check): void
+    public function deleteCheck(UrlCheck $check): void
     {
-        $sql = "DELETE FROM checks WHERE id = :id";
+        $sql = "DELETE FROM url_checks WHERE id = :id";
         $stmt = $this->pdo->prepare($sql);
         $stmt->execute(['id' => $check->getId()]);
     }
 
-    private function createCheck(Check $check): void
+    private function createCheck(UrlCheck $check): void
     {
         try {
             $created_at = Carbon::now()->toDateTimeString();
-            $sql = "INSERT INTO checks (code, url_id, h1, title, description, created_at) 
-                VALUES (:code, :url_id, :h1, :title, :description, :created_at)";
+            $sql = "INSERT INTO url_checks (status_code, url_id, h1, title, description, created_at) 
+                VALUES (:status_code, :url_id, :h1, :title, :description, :created_at)";
             $stmt = $this->pdo->prepare($sql);
             $stmt->execute([
-                'code' => $check->getCode() ?? 0,
+                'status_code' => $check->getStatusCode() ?? 0,
                 'url_id' => $check->getUrlId(),
                 'h1' => $check->getH1() ?? '',
                 'title' => $check->getTitle() ?? '',

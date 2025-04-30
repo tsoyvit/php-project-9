@@ -8,7 +8,7 @@ CREATE TABLE IF NOT EXISTS checks (
     id INT PRIMARY KEY GENERATED ALWAYS AS IDENTITY,
     url_id INT NOT NULL REFERENCES urls (id) ON DELETE CASCADE,
     h1 VARCHAR(255),
-    code INT,
+    status_code INT,
     title VARCHAR(255),
     description TEXT,
     created_at TIMESTAMP(0) NOT NULL

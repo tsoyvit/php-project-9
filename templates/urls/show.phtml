@@ -89,7 +89,7 @@
             <?php foreach ($checks as $check): ?>
             <tr>
                 <td><?= htmlspecialchars($check->getId() ?? '') ?></td>
-                <td><?= htmlspecialchars($check->getCode() ?? '') ?></td>
+                <td><?= htmlspecialchars($check->getStatusCode() ?? '') ?></td>
                 <td><?= htmlspecialchars($check->getH1() ?? '') ?></td>
                 <td><?= htmlspecialchars($check->getTitle() ?? '') ?></td>
                 <td><?= htmlspecialchars($check->getDescription() ?? '') ?></td>

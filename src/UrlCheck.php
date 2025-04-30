@@ -2,22 +2,22 @@
 
 namespace App;
 
-class Check
+class UrlCheck
 {
     private ?int $id = null;
     private int $url_id;
-    private ?int $code = null;
+    private ?int $statusCode = null;
     private ?string $h1 = null;
     private ?string $title = null;
     private ?string $description = null;
     private ?string $created_at  = null;
 
-    public static function fromArray(array $checkData, int $urlId): Check
+    public static function fromArray(array $checkData, int $urlId): UrlCheck
     {
-        $check = new Check();
+        $check = new UrlCheck();
         $check->setUrlId($urlId);
         $check->setId($checkData['id'] ?? null);
-        $check->setCode($checkData['code'] ?? null);
+        $check->setStatusCode($checkData['status_code'] ?? null);
         $check->setH1($checkData['h1'] ?? null);
         $check->setTitle($checkData['title'] ?? null);
         $check->setDescription($checkData['description'] ?? null);
@@ -35,14 +35,14 @@ class Check
         $this->id = $id;
     }
 
-    public function getCode(): ?int
+    public function getStatusCode(): ?int
     {
-        return $this->code;
+        return $this->statusCode;
     }
 
-    public function setCode(?int $code): void
+    public function setStatusCode(?int $statusCode): void
     {
-        $this->code = $code;
+        $this->statusCode = $statusCode;
     }
 
     public function getTitle(): ?string

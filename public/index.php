@@ -66,8 +66,8 @@ $container->set(UrlRepository::class, function ($c) {
     return new UrlRepository($c->get(\PDO::class), $c->get(Logger::class));
 });
 
-$container->set(CheckRepository::class, function ($c) {
-    return new CheckRepository($c->get(\PDO::class), $c->get(Logger::class));
+$container->set(UrlCheckRepository::class, function ($c) {
+    return new UrlCheckRepository($c->get(\PDO::class), $c->get(Logger::class));
 });
 
 $container->set(Client::class, function () {
@@ -101,7 +101,7 @@ $app->get('/urls', function (Request $request, Response $response) use ($router)
     $urlRepo = $this->get(UrlRepository::class);
     $urls = $urlRepo->getUrls();
     $messages = $this->get('flash')->getMessages();
-    $checkRepo = $this->get(CheckRepository::class);
+    $checkRepo = $this->get(UrlCheckRepository::class);
     $lastChecks = $checkRepo->getLastChecks();
     $params = [
         'urls' => $urls,
@@ -141,7 +141,7 @@ $app->get('/urls/{id}', function (Request $request, Response $response, $args) u
     $urlRepo = $this->get(UrlRepository::class);
     $id = $args['id'];
     $url = $urlRepo->getUrlById($id);
-    $checkRepo = $this->get(CheckRepository::class);
+    $checkRepo = $this->get(UrlCheckRepository::class);
     $checks = $checkRepo->getChecks($id);
 
     if (is_null($url)) {
@@ -162,11 +162,11 @@ $app->get('/urls/{id}', function (Request $request, Response $response, $args) u
 $app->post('/urls/{id}/checks', function (Request $request, Response $response, $args) use ($router) {
     $id = $args['id'];
     $client = $this->get(Client::class);
-    $checkRepo = $this->get(CheckRepository::class);
+    $checkRepo = $this->get(UrlCheckRepository::class);
     $urlRepo = $this->get(UrlRepository::class);
     $url = $urlRepo->getUrlById($id);
     $parse = new ParseSite($client, $url->getName());
-    $check = Check::fromArray($parse->parse(), $url->getId());
+    $check = UrlCheck::fromArray($parse->parse(), $url->getId());
     $checkRepo->saveCheck($check);
     $this->get('flash')->addMessage('success', 'Проверка успешно добавлена');
     return $response->withRedirect($router->urlFor('urls.show', ['id' => $url->getId()]));
