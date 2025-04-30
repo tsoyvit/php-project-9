@@ -1,8 +1,9 @@
 <?php
 
-//dump($errors);
 //dump($flash);
-//dump($url);
+//dump($errors);
+//dump($urls);
+//dump($lastChecks);
 
 ?>
 
@@ -47,33 +48,28 @@
 
 <main class="flex-grow-1">
     <div class="container-lg mt-3">
-        <h1></h1>
-        <div class="row">
-            <div class="col-12 col-md-10 col-lg-8 mx-auto border rounded-3 bg-light p-5">
-                <h1 class="display-3">Анализатор страниц</h1>
-                <p class="lead">Бесплатно проверяйте сайты на SEO пригодность</p>
-                <form action="/urls" method="post" class="row g-2" required>
-                    <div class="col-12 col-md-8">
-                        <label for="text" class="visually-hidden">Url для проверки</label>
-
-                            <input
-                                    type="text"
-                                    name="url[name]"
-                                    value="<?= htmlspecialchars($url ?? '') ?>"
-                                    class="form-control form-control-lg"
-                                    placeholder="https://www.example.com"
-                                    required
-                            >
-
-                        <?php if (isset($errors['name'])) : ?>
-                            <div><?= htmlspecialchars($errors['name']) ?></div>
-                        <?php endif; ?>
-                    </div>
-                    <div class="col-12 col-md-4 d-grid d-md-block">
-                        <input type="submit" class="btn btn-primary btn-lg w-100 text-uppercase" value="Проверить">
-                    </div>
-                </form>
-            </div>
+        <h1>Сайты</h1>
+        <div class="table-responsive">
+            <table class="table table-bordered table-hover text-nowrap" data-test="urls">
+                <thead>
+                <tr>
+                    <th>ID</th>
+                    <th>Имя</th>
+                    <th>Последняя проверка</th>
+                    <th>Код ответа</th>
+                </tr>
+                </thead>
+                <tbody>
+                <?php foreach ($lastChecks as $lastCheck) : ?>
+                <tr>
+                    <td><?= htmlspecialchars($lastCheck['id'] ?? '')  ?></td>
+                    <td><a href="/urls/<?= htmlspecialchars($lastCheck['id'] ?? '')  ?>"><?= htmlspecialchars($lastCheck['name'] ?? '') ?></a></td>
+                    <td><?= htmlspecialchars($lastCheck['created_at'] ?? '') ?></td>
+                    <td><?= htmlspecialchars($lastCheck['code']) ?></td>
+                </tr>
+                <?php endforeach; ?>
+                </tbody>
+            </table>
         </div>
     </div>
 </main>
