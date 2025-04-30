@@ -20,7 +20,7 @@ use Monolog\Handler\StreamHandler;
 use GuzzleHttp\Client;
 
 $dotenv = Dotenv::createImmutable(__DIR__ . '/../');
-$dotenv->load();
+$dotenv->safeLoad();
 
 $container = new Container();
 
