@@ -25,7 +25,7 @@ $dotenv->load();
 $container = new Container();
 
 $container->set(\PDO::class, function () {
-    $url = $_ENV['DATABASE_URL'];
+    $url = $_ENV['DATABASE_URL'] ?? getenv('DATABASE_URL');
 
     $parts = parse_url($url);
     $scheme = $parts['scheme'];
