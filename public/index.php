@@ -26,24 +26,29 @@ $container = new Container();
 
 $container->set(\PDO::class, function () {
     $url = $_ENV['DATABASE_URL'] ?? getenv('DATABASE_URL');
+    if (!$url) {
+        throw new \RuntimeException('DATABASE_URL не задан в .env или переменных окружения');
+    }
+
+    $url = str_replace('postgres://', 'postgresql://', $url);
 
     $parts = parse_url($url);
-    $scheme = $parts['scheme'];
-    $host = $parts['host'];
-    $port = $parts['port'];
-    $user = $parts['user'];
-    $pass = $parts['pass'];
-    $dbname = ltrim($parts['path'], '/');
-
-    if ($scheme !== 'postgresql') {
-        throw new \InvalidArgumentException('Поддерживается только PostgreSQL.');
+    if ($parts === false) {
+        throw new \InvalidArgumentException('Неверный формат DATABASE_URL');
     }
+
+    $port = $parts['port'] ?? '5432';
+    $host = $parts['host'] ?? '';
+    $user = $parts['user'] ?? '';
+    $pass = $parts['pass'] ?? '';
+    $dbname = isset($parts['path']) ? ltrim($parts['path'], '/') : '';
 
     $dsn = "pgsql:host=$host;port=$port;dbname=$dbname";
 
     return new \PDO($dsn, $user, $pass, [
         \PDO::ATTR_ERRMODE => \PDO::ERRMODE_EXCEPTION,
         \PDO::ATTR_DEFAULT_FETCH_MODE => \PDO::FETCH_ASSOC,
+        \PDO::ATTR_PERSISTENT => false,
     ]);
 });
 
