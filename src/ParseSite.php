@@ -21,24 +21,19 @@ class ParseSite
         $this->crawler = new Crawler();
     }
 
-    /**
-     * Парсит сайт, предварительно загружая HTML с помощью fetch().
-     *
-     * @throws GuzzleException
-     */
     public function parse(): array
     {
         try {
             $this->fetch();
             return [
-                'code' => $this->statusCode,
+                'status_code' => $this->statusCode,
                 'h1' => $this->parseH1(),
                 'title' => $this->parseTitle(),
                 'description' => $this->parseDescription(),
             ];
         } catch (GuzzleException $e) {
             return [
-                'code' => $e->getCode() ?: 500,
+                'status_code' => $e->getCode() ?: 500,
                 'error' => $e->getMessage()
             ];
         }
