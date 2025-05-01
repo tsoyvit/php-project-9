@@ -38,7 +38,8 @@ class ParseSite
         } catch (RequestException $e) {
             $result = ['error' => $e->getMessage()];
 
-            if ($e->hasResponse()) {
+            $response = $e->getResponse();
+            if ($response !== null) {
                 $this->html = (string)$e->getResponse()->getBody();
                 $this->doc = new Document($this->html);
                 $result['status_code'] = $e->getResponse()->getStatusCode();
@@ -69,7 +70,12 @@ class ParseSite
      */
     private function parseTitle(): ?string
     {
-        return optional($this->doc->first('title'))->text();
+        if ($this->doc === null) {
+            return null;
+        }
+
+        $element = $this->doc->first('title');
+        return $element ? $element->text() : null;
     }
 
     /**
@@ -77,7 +83,12 @@ class ParseSite
      */
     private function parseDescription(): ?string
     {
-        return optional($this->doc->first('meta[name=description]'))->attr('content');
+        if ($this->doc === null) {
+            return null;
+        }
+
+        $meta = $this->doc->first('meta[name=description]');
+        return $meta ? $meta->attr('content') : null;
     }
 
     /**
@@ -85,6 +96,11 @@ class ParseSite
      */
     private function parseH1(): ?string
     {
-        return optional($this->doc->first('h1'))->text();
+        if ($this->doc === null) {
+            return null;
+        }
+
+        $element = $this->doc->first('h1');
+        return $element ? $element->text() : null;
     }
 }

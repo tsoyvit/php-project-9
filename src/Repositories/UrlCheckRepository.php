@@ -139,6 +139,10 @@ class UrlCheckRepository
 
             $check->setId((int)$this->pdo->lastInsertId());
         } catch (\PDOException $e) {
+            $this->logger->error('Ошибка при сохранении UrlCheck', [
+                'url_id' => $check->getUrlId(),
+                'message' => $e->getMessage(),
+            ]);
             throw new \RuntimeException('Ошибка базы данных при сохранении.', 0, $e);
         }
     }

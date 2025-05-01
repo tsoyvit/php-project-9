@@ -95,7 +95,7 @@ class UrlCheck
         return $this->url_id;
     }
 
-    public function setUrlId(?int $urlId): void
+    public function setUrlId(int $urlId): void
     {
         $this->url_id = $urlId;
     }

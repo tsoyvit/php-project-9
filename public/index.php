@@ -79,7 +79,7 @@ $container->set(UrlCheckRepository::class, function ($c) {
 $container->set(Client::class, function () {
     return new Client([
         'timeout' => 10,
-        'verify' => false,
+        'verify' => true,
     ]);
 });
 
@@ -99,11 +99,11 @@ $app->addErrorMiddleware(true, true, true, $container->get(Logger::class));
 
 $router = $app->getRouteCollector()->getRouteParser();
 
-$app->get('/', function (Request $request, Response $response) use ($router) {
+$app->get('/', function (Request $request, Response $response) {
     return $this->get('renderer')->render($response, 'home.phtml', []);
 })->setName('home');
 
-$app->get('/urls', function (Request $request, Response $response) use ($router) {
+$app->get('/urls', function (Request $request, Response $response) {
     $urlRepo = $this->get(UrlRepository::class);
     $urls = $urlRepo->getUrls();
     $messages = $this->get('flash')->getMessages();
@@ -120,14 +120,15 @@ $app->get('/urls', function (Request $request, Response $response) use ($router)
 
 $app->post('/urls', function (Request $request, Response $response) use ($router) {
     $urlRepo = $this->get(UrlRepository::class);
-    $urlData = $request->getParsedBodyParam('url');
-    $normalizeUrl = NormalizeUrl::normalize($urlData['name']);
+    $urlData = $request->getParsedBody();
+    $urlName = $urlData['url']['name'] ?? null;
+    $normalizeUrl = NormalizeUrl::normalize($urlName);
     $errors = UrlValidator::validate($normalizeUrl);
 
     if (count($errors) > 0) {
         $params = [
             'errors' => $errors,
-            'url' => $urlData['name'],
+            'url' => $urlName,
         ];
         return $this->get('renderer')->render($response->withStatus(422), 'home.phtml', $params);
     }
@@ -140,10 +141,12 @@ $app->post('/urls', function (Request $request, Response $response) use ($router
         $this->get('flash')->addMessage('success', 'Страница успешно добавлена');
     }
 
-    return $response->withRedirect($router->urlFor('urls.show', ['id' => $url->getId()]));
+    return $response
+        ->withHeader('Location', $router->urlFor('urls.show', ['id' => $url->getId()]))
+        ->withStatus(302);
 })->setName('urls.store');
 
-$app->get('/urls/{id}', function (Request $request, Response $response, $args) use ($router) {
+$app->get('/urls/{id}', function (Request $request, Response $response, $args) {
     $urlRepo = $this->get(UrlRepository::class);
     $id = $args['id'];
     $url = $urlRepo->getUrlById($id);
@@ -151,7 +154,6 @@ $app->get('/urls/{id}', function (Request $request, Response $response, $args) u
     $checks = $checkRepo->getChecks($id);
 
     if (is_null($url)) {
-//        return $response->withStatus(404)->write("Страница не найдена!");
         return $this->get('renderer')->render($response->withStatus(404), 'urls/404.phtml', []);
     }
 
@@ -174,14 +176,23 @@ $app->post('/urls/{id}/checks', function (Request $request, Response $response, 
     $client = $this->get(Client::class);
 
     $url = $urlRepo->getUrlById($id);
+
+    if (is_null($url)) {
+        $this->get('flash')->addMessage('error', 'URL не найден');
+        return $response
+            ->withHeader('Location', $router->urlFor('urls.index'))
+            ->withStatus(302);
+    }
+
     $parser = new ParseSite($client, $url->getName());
     $result = $parser->parse();
-
     $analysis = ParseResultAnalyzer::getAnalysis($result);
 
     if ($analysis['check'] === 'danger') {
         $this->get('flash')->addMessage('error', $analysis['message']);
-        return $response->withRedirect($router->urlFor('urls.show', ['id' => $id]));
+        return $response
+            ->withHeader('Location', $router->urlFor('urls.show', ['id' => $id]))
+            ->withStatus(302);
     }
 
     $check = UrlCheck::fromArray($result, $url->getId());
@@ -192,7 +203,9 @@ $app->post('/urls/{id}/checks', function (Request $request, Response $response, 
         $this->get('flash')->addMessage('success', 'Страница успешно проверена');
     }
 
-    return $response->withRedirect($router->urlFor('urls.show', ['id' => $url->getId()]));
+    return $response
+        ->withHeader('Location', $router->urlFor('urls.show', ['id' => $id]))
+        ->withStatus(302);
 })->setName('checks.store');
 
 $app->run();
