@@ -4,6 +4,7 @@ FROM php:8.2-cli
 RUN apt-get update && apt-get install -y \
     libzip-dev \
     libpq-dev \
+    postgresql-client \
     && docker-php-ext-install zip pdo pdo_pgsql
 
 # Установка Composer
@@ -25,4 +26,4 @@ COPY . .
 EXPOSE 8002
 
 # Команда запуска
-CMD ["sh", "-c", "make start"]
+CMD sh -c "psql -a -d \$DATABASE_URL -f database.sql && make start"
