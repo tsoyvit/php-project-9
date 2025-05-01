@@ -5,7 +5,6 @@
     <!-- Проверять все PHP файлы в проекте -->
     <file>src</file>
     <file>public</file>
-    <file>tests</file>
 
     <!-- Игнорировать папки vendor и cache -->
     <exclude-pattern>vendor/*</exclude-pattern>

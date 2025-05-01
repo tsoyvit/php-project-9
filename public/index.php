@@ -6,18 +6,24 @@ require __DIR__ . '/../vendor/autoload.php';
 
 session_start();
 
+use App\Domain\Url;
+use App\Domain\UrlCheck;
+use App\Repositories\UrlCheckRepository;
+use App\Repositories\UrlRepository;
+use App\Services\NormalizeUrl;
+use App\Services\ParseResultAnalyzer;
+use App\Services\ParseSite;
+use App\Validators\UrlValidator;
+use DI\Container;
 use Dotenv\Dotenv;
+use GuzzleHttp\Client;
+use Monolog\Handler\StreamHandler;
 use Monolog\Level;
+use Monolog\Logger;
 use Psr\Http\Message\ResponseInterface as Response;
 use Psr\Http\Message\ServerRequestInterface as Request;
 use Slim\Factory\AppFactory;
-use Symfony\Component\VarDumper\VarDumper;
-use DI\Container;
 use Slim\Middleware\MethodOverrideMiddleware;
-use Illuminate\Support\Collection;
-use Monolog\Logger;
-use Monolog\Handler\StreamHandler;
-use GuzzleHttp\Client;
 
 $dotenv = Dotenv::createImmutable(__DIR__ . '/../');
 $dotenv->safeLoad();
@@ -118,23 +124,23 @@ $app->post('/urls', function (Request $request, Response $response) use ($router
     $normalizeUrl = NormalizeUrl::normalize($urlData['name']);
     $errors = UrlValidator::validate($normalizeUrl);
 
-    if ($url = $urlRepo->existsByName($normalizeUrl)) {
-        $this->get('flash')->addMessage('success', 'Страница уже существует');
-        return $response->withRedirect($router->urlFor('urls.show', ['id' => $url->getId()]));
+    if (count($errors) > 0) {
+        $params = [
+            'errors' => $errors,
+            'url' => $urlData['name'],
+        ];
+        return $this->get('renderer')->render($response->withStatus(422), 'home.phtml', $params);
     }
 
-    if (count($errors) === 0) {
+    if ($url = $urlRepo->existsByName($normalizeUrl)) {
+        $this->get('flash')->addMessage('success', 'Страница уже существует');
+    } else {
         $url = Url::fromArray(['name' => $normalizeUrl]);
         $urlRepo->saveUrl($url);
         $this->get('flash')->addMessage('success', 'Страница успешно добавлена');
-        return $response->withRedirect($router->urlFor('urls.show', ['id' => $url->getId()]));
     }
 
-    $params = [
-        'errors' => $errors,
-        'url' => $urlData['name'],
-    ];
-    return $this->get('renderer')->render($response->withStatus(422), 'home.phtml', $params);
+    return $response->withRedirect($router->urlFor('urls.show', ['id' => $url->getId()]));
 })->setName('urls.store');
 
 $app->get('/urls/{id}', function (Request $request, Response $response, $args) use ($router) {
@@ -145,7 +151,8 @@ $app->get('/urls/{id}', function (Request $request, Response $response, $args) u
     $checks = $checkRepo->getChecks($id);
 
     if (is_null($url)) {
-        return $response->withStatus(404)->write("Страница не найдена!");
+//        return $response->withStatus(404)->write("Страница не найдена!");
+        return $this->get('renderer')->render($response->withStatus(404), 'urls/404.phtml', []);
     }
 
     $messages = $this->get('flash')->getMessages();
@@ -161,14 +168,30 @@ $app->get('/urls/{id}', function (Request $request, Response $response, $args) u
 
 $app->post('/urls/{id}/checks', function (Request $request, Response $response, $args) use ($router) {
     $id = $args['id'];
-    $client = $this->get(Client::class);
-    $checkRepo = $this->get(UrlCheckRepository::class);
+
     $urlRepo = $this->get(UrlRepository::class);
+    $checkRepo = $this->get(UrlCheckRepository::class);
+    $client = $this->get(Client::class);
+
     $url = $urlRepo->getUrlById($id);
-    $parse = new ParseSite($client, $url->getName());
-    $check = UrlCheck::fromArray($parse->parse(), $url->getId());
+    $parser = new ParseSite($client, $url->getName());
+    $result = $parser->parse();
+
+    $analysis = ParseResultAnalyzer::getAnalysis($result);
+
+    if ($analysis['check'] === 'danger') {
+        $this->get('flash')->addMessage('error', $analysis['message']);
+        return $response->withRedirect($router->urlFor('urls.show', ['id' => $id]));
+    }
+
+    $check = UrlCheck::fromArray($result, $url->getId());
     $checkRepo->saveCheck($check);
-    $this->get('flash')->addMessage('success', 'Проверка успешно добавлена');
+    if ($analysis['check'] === 'warning') {
+        $this->get('flash')->addMessage('warning', $analysis['message']);
+    } else {
+        $this->get('flash')->addMessage('success', 'Страница успешно проверена');
+    }
+
     return $response->withRedirect($router->urlFor('urls.show', ['id' => $url->getId()]));
 })->setName('checks.store');
 

@@ -1,7 +1,8 @@
 <?php
 
-namespace App;
+namespace App\Repositories;
 
+use App\Domain\Url;
 use Carbon\Carbon;
 use Monolog\Logger;
 
@@ -9,6 +10,7 @@ class UrlRepository
 {
     private \PDO $pdo;
     private Logger $logger;
+
     public function __construct(\PDO $pdo, Logger $logger)
     {
         $this->pdo = $pdo;
@@ -18,7 +20,7 @@ class UrlRepository
     public function getUrls(): array
     {
         $urls = [];
-        $stmt = $this->pdo->prepare("SELECT * FROM urls");
+        $stmt = $this->pdo->prepare("SELECT * FROM urls ORDER BY created_at DESC");
         $stmt->execute();
         while ($row = $stmt->fetch()) {
             $url = Url::fromArray([
@@ -80,7 +82,7 @@ class UrlRepository
                 'created_at' => $created_at
             ]);
 
-            $id = (int) $this->pdo->lastInsertId();
+            $id = (int)$this->pdo->lastInsertId();
             $url->setId($id);
         } catch (\PDOException $e) {
             throw new \RuntimeException('Ошибка базы данных при сохранении.', 0, $e);

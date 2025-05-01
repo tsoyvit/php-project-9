@@ -1,7 +1,8 @@
 <?php
 
-namespace App;
+namespace App\Repositories;
 
+use App\Domain\UrlCheck;
 use Carbon\Carbon;
 use Monolog\Logger;
 
@@ -9,6 +10,7 @@ class UrlCheckRepository
 {
     private \PDO $pdo;
     private Logger $logger;
+
     public function __construct(\PDO $pdo, Logger $logger)
     {
         $this->pdo = $pdo;
@@ -41,16 +43,17 @@ class UrlCheckRepository
         return $checks;
     }
 
-    public function getLastChecks()
+    public function getLastChecks(): array
     {
         $lastChecks = [];
         $sql = "SELECT urls.id, urls.name, c.created_at, c.status_code
-FROM urls
-    LEFT JOIN (
-    SELECT DISTINCT ON (url_id) *
-    FROM url_checks
-    ORDER BY url_id, created_at DESC) c ON urls.id = c.url_id
-ORDER BY c.created_at";
+                FROM urls
+                LEFT JOIN (
+                SELECT DISTINCT ON (url_id) *
+                FROM url_checks
+                ORDER BY url_id, created_at DESC
+                ) c ON urls.id = c.url_id
+                ORDER BY urls.created_at DESC";
         $stmt = $this->pdo->prepare($sql);
         $stmt->execute();
         while ($row = $stmt->fetch()) {
@@ -110,19 +113,31 @@ ORDER BY c.created_at";
     {
         try {
             $created_at = Carbon::now()->toDateTimeString();
-            $sql = "INSERT INTO url_checks (status_code, url_id, h1, title, description, created_at) 
-                VALUES (:status_code, :url_id, :h1, :title, :description, :created_at)";
-            $stmt = $this->pdo->prepare($sql);
-            $stmt->execute([
-                'status_code' => $check->getStatusCode() ?? 0,
+
+            $fields = [
+                'status_code' => $check->getStatusCode(),
                 'url_id' => $check->getUrlId(),
-                'h1' => $check->getH1() ?? '',
-                'title' => $check->getTitle() ?? '',
-                'description' => $check->getDescription() ?? '',
-                'created_at' => $created_at
-            ]);
-            $id = (int) $this->pdo->lastInsertId();
-            $check->setId($id);
+                'created_at' => $created_at,
+            ];
+
+            if ($check->getH1() !== null) {
+                $fields['h1'] = $check->getH1();
+            }
+            if ($check->getTitle() !== null) {
+                $fields['title'] = $check->getTitle();
+            }
+            if ($check->getDescription() !== null) {
+                $fields['description'] = $check->getDescription();
+            }
+
+            $columns = implode(', ', array_keys($fields));
+            $placeholders = implode(', ', array_map(fn($key) => ":$key", array_keys($fields)));
+
+            $sql = "INSERT INTO url_checks ($columns) VALUES ($placeholders)";
+            $stmt = $this->pdo->prepare($sql);
+            $stmt->execute($fields);
+
+            $check->setId((int)$this->pdo->lastInsertId());
         } catch (\PDOException $e) {
             throw new \RuntimeException('Ошибка базы данных при сохранении.', 0, $e);
         }
