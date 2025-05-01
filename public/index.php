@@ -120,7 +120,7 @@ $app->get('/urls', function (Request $request, Response $response) {
 
 $app->post('/urls', function (Request $request, Response $response) use ($router) {
     $urlRepo = $this->get(UrlRepository::class);
-    $urlData = $request->getParsedBody();
+    $urlData = (array) $request->getParsedBody();
     $urlName = $urlData['url']['name'] ?? null;
     $normalizeUrl = NormalizeUrl::normalize($urlName);
     $errors = UrlValidator::validate($normalizeUrl);
