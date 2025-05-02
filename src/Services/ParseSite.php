@@ -70,11 +70,13 @@ class ParseSite
      */
     private function parseTitle(): ?string
     {
-        $element = $this->doc->first('title');
-        if ($element instanceof \DiDom\Element) {
-            return $element->text();
+        $doc = $this->doc;
+        if (!($doc instanceof Document)) {
+            return null;
         }
-        return null;
+
+        $element = $doc->first('title');
+        return $element instanceof \DiDom\Element ? $element->text() : null;
     }
 
     /**
@@ -82,11 +84,13 @@ class ParseSite
      */
     private function parseDescription(): ?string
     {
-        $meta = $this->doc->first('meta[name=description]');
-        if ($meta instanceof \DiDom\Element) {
-            return $meta->attr('content');
+        $doc = $this->doc;
+        if (!($doc instanceof Document)) {
+            return null;
         }
-        return null;
+
+        $meta = $doc->first('meta[name=description]');
+        return $meta instanceof \DiDom\Element ? $meta->attr('content') : null;
     }
 
     /**
@@ -94,10 +98,12 @@ class ParseSite
      */
     private function parseH1(): ?string
     {
-        $element = $this->doc->first('h1');
-        if ($element instanceof \DiDom\Element) {
-            return $element->text();
+        $doc = $this->doc;
+        if (!($doc instanceof Document)) {
+            return null;
         }
-        return null;
+
+        $element = $doc->first('h1');
+        return $element instanceof \DiDom\Element ? $element->text() : null;
     }
 }
