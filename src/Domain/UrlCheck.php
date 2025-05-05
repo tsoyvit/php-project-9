@@ -5,14 +5,14 @@ namespace App\Domain;
 class UrlCheck
 {
     private ?int $id = null;
-    private int $url_id;
+    private int $urlId;
     private ?int $statusCode = null;
     private ?string $h1 = null;
     private ?string $title = null;
     private ?string $description = null;
-    private ?string $created_at  = null;
+    private ?string $createdAt  = null;
 
-    public static function fromArray(array $checkData, int $urlId): UrlCheck
+    public static function fromArrayAndUrlId(array $checkData, int $urlId): UrlCheck
     {
         $check = new UrlCheck();
         $check->setUrlId($urlId);
@@ -67,12 +67,12 @@ class UrlCheck
 
     public function getCreatedAt(): ?string
     {
-        return $this->created_at;
+        return $this->createdAt;
     }
 
-    public function setCreatedAt(?string $created_at): void
+    public function setCreatedAt(?string $createdAt): void
     {
-        $this->created_at = $created_at;
+        $this->createdAt = $createdAt;
     }
 
     public function exists(): bool
@@ -92,11 +92,11 @@ class UrlCheck
 
     public function getUrlId(): ?int
     {
-        return $this->url_id;
+        return $this->urlId;
     }
 
     public function setUrlId(int $urlId): void
     {
-        $this->url_id = $urlId;
+        $this->urlId = $urlId;
     }
 }

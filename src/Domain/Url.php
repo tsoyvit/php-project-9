@@ -6,7 +6,7 @@ class Url
 {
     private ?int $id = null;
     private ?string $name = null;
-    private ?string $created_at  = null;
+    private ?string $createdAt  = null;
 
     public static function fromArray(array $data): Url
     {
@@ -28,7 +28,7 @@ class Url
 
     public function getCreatedAt(): ?string
     {
-        return $this->created_at;
+        return $this->createdAt;
     }
 
     public function setId(?int $id): void
@@ -41,9 +41,9 @@ class Url
         $this->name = $name;
     }
 
-    public function setCreatedAt(?string $created_at): void
+    public function setCreatedAt(?string $createdAt): void
     {
-        $this->created_at = $created_at;
+        $this->createdAt = $createdAt;
     }
     public function exists(): bool
     {

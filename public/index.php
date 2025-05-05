@@ -11,15 +11,11 @@ use App\Domain\UrlCheck;
 use App\Repositories\UrlCheckRepository;
 use App\Repositories\UrlRepository;
 use App\Services\NormalizeUrl;
-use App\Services\ParseResultAnalyzer;
-use App\Services\ParseSite;
+use App\Services\Parser;
 use App\Validators\UrlValidator;
 use DI\Container;
 use Dotenv\Dotenv;
 use GuzzleHttp\Client;
-use Monolog\Handler\StreamHandler;
-use Monolog\Level;
-use Monolog\Logger;
 use Psr\Http\Message\ResponseInterface as Response;
 use Psr\Http\Message\ServerRequestInterface as Request;
 use Slim\Factory\AppFactory;
@@ -58,22 +54,12 @@ $container->set(\PDO::class, function () {
     ]);
 });
 
-
-$container->set(Logger::class, function () {
-    if (!is_dir(__DIR__ . '/../logs')) {
-        mkdir(__DIR__ . '/../logs', 0777, true);
-    }
-    $logger = new Logger('app');
-    $logger->pushHandler(new StreamHandler(__DIR__ . '/../logs/app.log', Level::Warning));
-    return $logger;
-});
-
 $container->set(UrlRepository::class, function ($c) {
-    return new UrlRepository($c->get(\PDO::class), $c->get(Logger::class));
+    return new UrlRepository($c->get(\PDO::class));
 });
 
 $container->set(UrlCheckRepository::class, function ($c) {
-    return new UrlCheckRepository($c->get(\PDO::class), $c->get(Logger::class));
+    return new UrlCheckRepository($c->get(\PDO::class));
 });
 
 $container->set(Client::class, function () {
@@ -95,12 +81,16 @@ AppFactory::setContainer($container);
 $app = AppFactory::create();
 
 $app->add(MethodOverrideMiddleware::class);
-$app->addErrorMiddleware(true, true, true, $container->get(Logger::class));
+$app->addErrorMiddleware(true, true, true);
 
 $router = $app->getRouteCollector()->getRouteParser();
 
 $app->get('/', function (Request $request, Response $response) {
-    return $this->get('renderer')->render($response, 'home.phtml', []);
+    $messages = $this->get('flash')->getMessages();
+    $params = [
+        'flash' => $messages,
+    ];
+    return $this->get('renderer')->render($response, 'home.phtml', $params);
 })->setName('home');
 
 $app->get('/urls', function (Request $request, Response $response) {
@@ -137,8 +127,15 @@ $app->post('/urls', function (Request $request, Response $response) use ($router
         $this->get('flash')->addMessage('success', 'Страница уже существует');
     } else {
         $url = Url::fromArray(['name' => $normalizeUrl]);
-        $urlRepo->saveUrl($url);
-        $this->get('flash')->addMessage('success', 'Страница успешно добавлена');
+        try {
+            $urlRepo->createUrl($url);
+            $this->get('flash')->addMessage('success', 'Страница успешно добавлена');
+        } catch (\RuntimeException $e) {
+            $this->get('flash')->addMessage('error', 'Ошибка при сохранении.');
+            return $response
+                ->withHeader('Location', $router->urlFor('home'))
+                ->withStatus(302);
+        }
     }
 
     return $response
@@ -184,21 +181,20 @@ $app->post('/urls/{id}/checks', function (Request $request, Response $response, 
             ->withStatus(302);
     }
 
-    $parser = new ParseSite($client, $url->getName());
-    $result = $parser->parse();
-    $analysis = ParseResultAnalyzer::getAnalysis($result);
+    $parser = new Parser($client, $url->getName());
+    $checkData = $parser->parse();
 
-    if ($analysis['check'] === 'danger') {
-        $this->get('flash')->addMessage('error', $analysis['message']);
+    if (isset($checkData['error']) && !array_key_exists('status_code', $checkData)) {
+        $this->get('flash')->addMessage('error', 'Произошла ошибка при проверке, не удалось подключиться');
         return $response
             ->withHeader('Location', $router->urlFor('urls.show', ['id' => $id]))
             ->withStatus(302);
     }
 
-    $check = UrlCheck::fromArray($result, $url->getId());
-    $checkRepo->saveCheck($check);
-    if ($analysis['check'] === 'warning') {
-        $this->get('flash')->addMessage('warning', $analysis['message']);
+    $check = UrlCheck::fromArrayAndUrlId($checkData, $url->getId());
+    $checkRepo->createCheck($check);
+    if (isset($checkData['error'])) {
+        $this->get('flash')->addMessage('warning', 'Проверка была выполнена, но сервер ответил с ошибкой');
     } else {
         $this->get('flash')->addMessage('success', 'Страница успешно проверена');
     }

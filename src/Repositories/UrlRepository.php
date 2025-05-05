@@ -9,12 +9,10 @@ use Monolog\Logger;
 class UrlRepository
 {
     private \PDO $pdo;
-    private Logger $logger;
 
-    public function __construct(\PDO $pdo, Logger $logger)
+    public function __construct(\PDO $pdo)
     {
         $this->pdo = $pdo;
-        $this->logger = $logger;
     }
 
     public function getUrls(): array
@@ -47,15 +45,6 @@ class UrlRepository
         return null;
     }
 
-    public function saveUrl(Url $url): void
-    {
-        if ($url->exists()) {
-            $this->updateUrl($url);
-        } else {
-            $this->createUrl($url);
-        }
-    }
-
     public function getUrlById(int $id): ?Url
     {
         $sql = "SELECT * FROM urls WHERE id = ?";
@@ -85,25 +74,7 @@ class UrlRepository
             $id = (int)$this->pdo->lastInsertId();
             $url->setId($id);
         } catch (\PDOException $e) {
-            $this->logger->error('Ошибка при сохранении UrlCheck', [
-                'name' => $url->getName(),
-                'message' => $e->getMessage(),
-            ]);
             throw new \RuntimeException('Ошибка базы данных при сохранении.', 0, $e);
         }
-    }
-
-    public function updateUrl(Url $url): void
-    {
-        $sql = "UPDATE urls SET name = ? WHERE id = ?";
-        $stmt = $this->pdo->prepare($sql);
-        $stmt->execute([$url->getName(), $url->getId()]);
-    }
-
-    public function deleteUrl(Url $url): void
-    {
-        $sql = "DELETE FROM urls WHERE id = ?";
-        $stmt = $this->pdo->prepare($sql);
-        $stmt->execute([$url->getId()]);
     }
 }

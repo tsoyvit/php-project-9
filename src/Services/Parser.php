@@ -9,7 +9,7 @@ use GuzzleHttp\Exception\ConnectException;
 use GuzzleHttp\Exception\GuzzleException;
 use GuzzleHttp\Exception\RequestException;
 
-class ParseSite
+class Parser
 {
     private Client $client;
     private string $url;
