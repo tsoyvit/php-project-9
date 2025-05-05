@@ -10,8 +10,13 @@ class PageCheckResult
     private ?string $description;
     private ?string $error;
 
-    public function __construct($statusCode, $h1, $title, $description, $error = null)
-    {
+    public function __construct(
+        ?int $statusCode,
+        ?string $h1,
+        ?string $title,
+        ?string $description,
+        ?string $error = null
+    ) {
         $this->statusCode = $statusCode;
         $this->h1 = $h1;
         $this->title = $title;
