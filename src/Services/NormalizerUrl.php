@@ -2,7 +2,7 @@
 
 namespace App\Services;
 
-class NormalizeUrl
+class NormalizerUrl
 {
     public static function normalize(string $url): string
     {

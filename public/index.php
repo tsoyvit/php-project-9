@@ -10,7 +10,7 @@ use App\Domain\Url;
 use App\Domain\UrlCheck;
 use App\Repositories\UrlCheckRepository;
 use App\Repositories\UrlRepository;
-use App\Services\NormalizeUrl;
+use App\Services\NormalizerUrl;
 use App\Services\Parser;
 use App\Validators\UrlValidator;
 use DI\Container;
@@ -69,6 +69,18 @@ $container->set(Client::class, function () {
     ]);
 });
 
+$container->set(Fetcher::class, function ($c) {
+    return new Fetcher($c->get(Client::class));
+});
+
+$container->set(Parser::class, function () {
+    return new Parser();
+});
+
+$container->set(PageAnalyzer::class, function ($c) {
+    return new PageAnalyzer($c->get(Fetcher::class), $c->get(Parser::class));
+});
+
 $container->set('renderer', function () {
     return new \Slim\Views\PhpRenderer(__DIR__ . '/../templates');
 });
@@ -110,9 +122,9 @@ $app->get('/urls', function (Request $request, Response $response) {
 
 $app->post('/urls', function (Request $request, Response $response) use ($router) {
     $urlRepo = $this->get(UrlRepository::class);
-    $urlData = (array) $request->getParsedBody();
+    $urlData = (array)$request->getParsedBody();
     $urlName = $urlData['url']['name'] ?? null;
-    $normalizeUrl = NormalizeUrl::normalize($urlName);
+    $normalizeUrl = NormalizerUrl::normalize($urlName);
     $errors = UrlValidator::validate($normalizeUrl);
 
     if (count($errors) > 0) {
@@ -170,7 +182,6 @@ $app->post('/urls/{id}/checks', function (Request $request, Response $response, 
 
     $urlRepo = $this->get(UrlRepository::class);
     $checkRepo = $this->get(UrlCheckRepository::class);
-    $client = $this->get(Client::class);
 
     $url = $urlRepo->getUrlById($id);
 
@@ -181,19 +192,19 @@ $app->post('/urls/{id}/checks', function (Request $request, Response $response, 
             ->withStatus(302);
     }
 
-    $parser = new Parser($client, $url->getName());
-    $checkData = $parser->parse();
+    $analyzer = $this->get(PageAnalyzer::class);
+    $checkData = $analyzer->analyze($url->getName());
 
-    if (isset($checkData['error']) && !array_key_exists('status_code', $checkData)) {
+    if ($checkData->hasError() && $checkData->getStatusCode() === null) {
         $this->get('flash')->addMessage('error', 'Произошла ошибка при проверке, не удалось подключиться');
         return $response
             ->withHeader('Location', $router->urlFor('urls.show', ['id' => $id]))
             ->withStatus(302);
     }
 
-    $check = UrlCheck::fromArrayAndUrlId($checkData, $url->getId());
+    $check = UrlCheck::fromArrayAndUrlId($checkData->toArray(), $url->getId());
     $checkRepo->createCheck($check);
-    if (isset($checkData['error'])) {
+    if ($checkData->hasError()) {
         $this->get('flash')->addMessage('warning', 'Проверка была выполнена, но сервер ответил с ошибкой');
     } else {
         $this->get('flash')->addMessage('success', 'Страница успешно проверена');
