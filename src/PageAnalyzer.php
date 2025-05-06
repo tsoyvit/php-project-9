@@ -32,7 +32,7 @@ class PageAnalyzer
                 description: $parsed['description']
             );
         } catch (ConnectException $e) {
-            return new PageCheckResult(null, null, null, null, $e->getMessage());
+            return new PageCheckResult(error: $e->getMessage());
         } catch (RequestException $e) {
             $response = $e->getResponse();
             if ($response !== null) {
@@ -47,9 +47,9 @@ class PageAnalyzer
                     error: $e->getMessage()
                 );
             }
-            return new PageCheckResult(null, null, null, null, $e->getMessage());
+            return new PageCheckResult(error: $e->getMessage());
         } catch (GuzzleException $e) {
-            return new PageCheckResult(null, null, null, null, $e->getMessage());
+            return new PageCheckResult(error: $e->getMessage());
         }
     }
 }

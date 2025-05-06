@@ -11,10 +11,10 @@ class PageCheckResult
     private ?string $error;
 
     public function __construct(
-        ?int $statusCode,
-        ?string $h1,
-        ?string $title,
-        ?string $description,
+        ?int $statusCode = null,
+        ?string $h1 = null,
+        ?string $title = null,
+        ?string $description = null,
         ?string $error = null
     ) {
         $this->statusCode = $statusCode;

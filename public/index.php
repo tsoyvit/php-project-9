@@ -137,15 +137,16 @@ $app->post('/urls', function (Request $request, Response $response) use ($router
 
     if ($url = $urlRepo->existsByName($normalizeUrl)) {
         $this->get('flash')->addMessage('success', 'Страница уже существует');
-    } else {
-        $url = Url::fromArray(['name' => $normalizeUrl]);
-        try {
-            $urlRepo->createUrl($url);
-            $this->get('flash')->addMessage('success', 'Страница успешно добавлена');
-        } catch (\RuntimeException $e) {
-            $this->get('flash')->addMessage('error', 'Ошибка при сохранении.');
-            return \App\redirect($response, $router, 'home');
-        }
+        return \App\redirect($response, $router, 'urls.show', ['id' => $url->getId()]);
+    }
+
+    $url = Url::fromArray(['name' => $normalizeUrl]);
+    try {
+        $urlRepo->createUrl($url);
+        $this->get('flash')->addMessage('success', 'Страница успешно добавлена');
+    } catch (\RuntimeException $e) {
+        $this->get('flash')->addMessage('error', 'Ошибка при сохранении.');
+        return \App\redirect($response, $router, 'home');
     }
 
     return \App\redirect($response, $router, 'urls.show', ['id' => $url->getId()]);
