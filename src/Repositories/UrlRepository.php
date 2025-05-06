@@ -4,7 +4,6 @@ namespace App\Repositories;
 
 use App\Domain\Url;
 use Carbon\Carbon;
-use Monolog\Logger;
 
 class UrlRepository
 {
@@ -62,19 +61,15 @@ class UrlRepository
 
     public function createUrl(Url $url): void
     {
-        try {
-            $created_at = Carbon::now()->toDateTimeString();
-            $sql = "INSERT INTO urls (name, created_at) VALUES (:name, :created_at)";
-            $stmt = $this->pdo->prepare($sql);
-            $stmt->execute([
-                'name' => $url->getName(),
-                'created_at' => $created_at
-            ]);
+        $createdAt = Carbon::now()->toDateTimeString();
+        $sql = "INSERT INTO urls (name, created_at) VALUES (:name, :created_at)";
+        $stmt = $this->pdo->prepare($sql);
+        $stmt->execute([
+            'name' => $url->getName(),
+            'created_at' => $createdAt
+        ]);
 
-            $id = (int)$this->pdo->lastInsertId();
-            $url->setId($id);
-        } catch (\PDOException $e) {
-            throw new \RuntimeException('Ошибка базы данных при сохранении.', 0, $e);
-        }
+        $id = (int)$this->pdo->lastInsertId();
+        $url->setId($id);
     }
 }

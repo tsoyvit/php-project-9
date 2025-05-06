@@ -27,14 +27,15 @@ class UrlCheckRepository
             $stmt->execute([$urlId]);
         }
         while ($row = $stmt->fetch()) {
-            $check = UrlCheck::fromArrayAndUrlId([
-                'id' => $row['id'],
-                'status_code' => $row['status_code'],
-                'h1' => $row['h1'],
-                'title' => $row['title'],
-                'description' => $row['description'],
-                'created_at' => $row['created_at']
-            ], $row['url_id']);
+            $check = new UrlCheck(
+                urlId: $row['url_id'],
+                id: $row['id'],
+                statusCode: $row['status_code'],
+                h1: $row['h1'],
+                title: $row['title'],
+                description: $row['description'],
+                createdAt: $row['created_at']
+            );
             $checks[] = $check;
         }
         return $checks;
@@ -43,14 +44,16 @@ class UrlCheckRepository
     public function getLastChecks(): array
     {
         $lastChecks = [];
-        $sql = "SELECT urls.id, urls.name, c.created_at, c.status_code
+        $sql = "WITH latest_checks AS (
+                    SELECT DISTINCT ON (url_id) status_code, url_id, created_at
+                    FROM url_checks
+                    ORDER BY url_id, created_at DESC
+                )
+                SELECT urls.id, urls.name, c.created_at, c.status_code
                 FROM urls
-                LEFT JOIN (
-                SELECT DISTINCT ON (url_id) *
-                FROM url_checks
-                ORDER BY url_id, created_at DESC
-                ) c ON urls.id = c.url_id
-                ORDER BY urls.created_at DESC";
+                    LEFT JOIN latest_checks c ON urls.id = c.url_id
+                ORDER BY urls.created_at DESC
+                ";
         $stmt = $this->pdo->prepare($sql);
         $stmt->execute();
         while ($row = $stmt->fetch()) {
@@ -61,35 +64,24 @@ class UrlCheckRepository
 
     public function createCheck(UrlCheck $check): void
     {
-        try {
-            $created_at = Carbon::now()->toDateTimeString();
+        $createdAt = Carbon::now()->toDateTimeString();
 
-            $fields = [
-                'status_code' => $check->getStatusCode(),
-                'url_id' => $check->getUrlId(),
-                'created_at' => $created_at,
-            ];
+        $sql = "INSERT INTO url_checks 
+                    (url_id, h1, status_code, title, description, created_at)
+                VALUES 
+                    (:url_id, :h1, :status_code, :title, :description, :created_at)";
 
-            if ($check->getH1() !== null) {
-                $fields['h1'] = $check->getH1();
-            }
-            if ($check->getTitle() !== null) {
-                $fields['title'] = $check->getTitle();
-            }
-            if ($check->getDescription() !== null) {
-                $fields['description'] = $check->getDescription();
-            }
+        $stmt = $this->pdo->prepare($sql);
+        $stmt->execute([
+            'url_id' => $check->getUrlId(),
+            'h1' => $check->getH1(),
+            'status_code' => $check->getStatusCode(),
+            'title' => $check->getTitle(),
+            'description' => $check->getDescription(),
+            'created_at' => $createdAt
+        ]);
 
-            $columns = implode(', ', array_keys($fields));
-            $placeholders = implode(', ', array_map(fn($key) => ":$key", array_keys($fields)));
-
-            $sql = "INSERT INTO url_checks ($columns) VALUES ($placeholders)";
-            $stmt = $this->pdo->prepare($sql);
-            $stmt->execute($fields);
-
-            $check->setId((int)$this->pdo->lastInsertId());
-        } catch (\PDOException $e) {
-            throw new \RuntimeException('Ошибка базы данных при сохранении.', 0, $e);
-        }
+        $check->setId((int)$this->pdo->lastInsertId());
+        $check->setCreatedAt($createdAt);
     }
 }

@@ -69,20 +69,18 @@ $container->set(Client::class, function () {
     ]);
 });
 
-$container->set(Fetcher::class, function ($c) {
-    return new Fetcher($c->get(Client::class));
-});
-
 $container->set(Parser::class, function () {
     return new Parser();
 });
 
 $container->set(PageAnalyzer::class, function ($c) {
-    return new PageAnalyzer($c->get(Fetcher::class), $c->get(Parser::class));
+    return new PageAnalyzer($c->get(Client::class), $c->get(Parser::class));
 });
 
 $container->set('renderer', function () {
-    return new \Slim\Views\PhpRenderer(__DIR__ . '/../templates');
+    $renderer = new \Slim\Views\PhpRenderer(__DIR__ . '/../templates');
+    $renderer->setLayout('layout.phtml');
+    return $renderer;
 });
 
 $container->set('flash', function () {
@@ -195,8 +193,21 @@ $app->post('/urls/{id}/checks', function (Request $request, Response $response, 
         return \App\redirect($response, $router, 'urls.show', ['id' => $id]);
     }
 
-    $check = UrlCheck::fromArrayAndUrlId($checkData->toArray(), $url->getId());
-    $checkRepo->createCheck($check);
+    $check = new UrlCheck(
+        urlId: $url->getId(),
+        statusCode: $checkData->getStatusCode(),
+        h1: $checkData->getH1(),
+        title: $checkData->getTitle(),
+        description: $checkData->getDescription()
+    );
+
+    try {
+        $checkRepo->createCheck($check);
+    } catch (\RuntimeException $e) {
+        $this->get('flash')->addMessage('error', 'Ошибка при сохранении.');
+        return \App\redirect($response, $router, 'urls.show', ['id' => $id]);
+    }
+
     if ($checkData->hasError()) {
         $this->get('flash')->addMessage('warning', 'Проверка была выполнена, но сервер ответил с ошибкой');
     } else {
@@ -204,5 +215,9 @@ $app->post('/urls/{id}/checks', function (Request $request, Response $response, 
     }
     return \App\redirect($response, $router, 'urls.show', ['id' => $id]);
 })->setName('checks.store');
+
+$app->map(['GET', 'POST', 'PUT', 'DELETE', 'PATCH'], '/{routes:.+}', function (Request $request, Response $response) {
+    return $this->get('renderer')->render($response->withStatus(404), '404.phtml', []);
+});
 
 $app->run();

@@ -4,25 +4,30 @@ namespace App\Domain;
 
 class UrlCheck
 {
-    private ?int $id = null;
+    private ?int $id;
     private int $urlId;
-    private ?int $statusCode = null;
-    private ?string $h1 = null;
-    private ?string $title = null;
-    private ?string $description = null;
-    private ?string $createdAt  = null;
+    private ?int $statusCode;
+    private ?string $h1;
+    private ?string $title;
+    private ?string $description;
+    private ?string $createdAt;
 
-    public static function fromArrayAndUrlId(array $checkData, int $urlId): UrlCheck
-    {
-        $check = new UrlCheck();
-        $check->setUrlId($urlId);
-        $check->setId($checkData['id'] ?? null);
-        $check->setStatusCode($checkData['status_code'] ?? null);
-        $check->setH1($checkData['h1'] ?? null);
-        $check->setTitle($checkData['title'] ?? null);
-        $check->setDescription($checkData['description'] ?? null);
-        $check->setCreatedAt($checkData['created_at'] ?? null);
-        return $check;
+    public function __construct(
+        int $urlId,
+        ?int $id = null,
+        ?int $statusCode = null,
+        ?string $h1 = null,
+        ?string $title = null,
+        ?string $description = null,
+        ?string $createdAt = null
+    ) {
+        $this->urlId = $urlId;
+        $this->createdAt = $createdAt;
+        $this->statusCode = $statusCode;
+        $this->h1 = $h1;
+        $this->title = $title;
+        $this->description = $description;
+        $this->id = $id;
     }
 
     public function getId(): ?int

@@ -3,25 +3,26 @@
 namespace App;
 
 use App\Services\Parser;
+use GuzzleHttp\Client;
 use GuzzleHttp\Exception\ConnectException;
 use GuzzleHttp\Exception\GuzzleException;
 use GuzzleHttp\Exception\RequestException;
 
 class PageAnalyzer
 {
-    private Fetcher $fetcher;
+    private Client $client;
     private Parser $parse;
 
-    public function __construct(Fetcher $fetcher, Parser $parse)
+    public function __construct(Client $client, Parser $parse)
     {
-        $this->fetcher = $fetcher;
+        $this->client = $client;
         $this->parse = $parse;
     }
 
     public function analyze(string $url): PageCheckResult
     {
         try {
-            $response = $this->fetcher->fetch($url);
+            $response = $this->client->request('GET', $url);
             $html = (string)$response->getBody();
             $parsed = $this->parse->parse($html);
 

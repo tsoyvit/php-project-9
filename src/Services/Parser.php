@@ -28,7 +28,8 @@ class Parser
      */
     private function extractText(Document $doc, string $selector): ?string
     {
-        return $doc->first($selector)?->text();
+        $element = $doc->first($selector);
+        return $element instanceof Element ? $element->text() : null;
     }
 
     /**
@@ -36,6 +37,7 @@ class Parser
      */
     private function extractAttribute(Document $doc, string $selector, string $attr): ?string
     {
-        return $doc->first($selector)?->attr($attr);
+        $element = $doc->first($selector);
+        return $element instanceof Element ? $element->attr($attr) : null;
     }
 }
