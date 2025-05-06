@@ -144,15 +144,11 @@ $app->post('/urls', function (Request $request, Response $response) use ($router
             $this->get('flash')->addMessage('success', 'Страница успешно добавлена');
         } catch (\RuntimeException $e) {
             $this->get('flash')->addMessage('error', 'Ошибка при сохранении.');
-            return $response
-                ->withHeader('Location', $router->urlFor('home'))
-                ->withStatus(302);
+            return redirect($response, $router, 'home');
         }
     }
 
-    return $response
-        ->withHeader('Location', $router->urlFor('urls.show', ['id' => $url->getId()]))
-        ->withStatus(302);
+    return redirect($response, $router, 'urls.show', ['id' => $url->getId()]);
 })->setName('urls.store');
 
 $app->get('/urls/{id}', function (Request $request, Response $response, $args) {
@@ -163,7 +159,7 @@ $app->get('/urls/{id}', function (Request $request, Response $response, $args) {
     $checks = $checkRepo->getChecks($id);
 
     if (is_null($url)) {
-        return $this->get('renderer')->render($response->withStatus(404), 'urls/404.phtml', []);
+        return $this->get('renderer')->render($response->withStatus(404), '404.phtml', []);
     }
 
     $messages = $this->get('flash')->getMessages();
@@ -187,9 +183,7 @@ $app->post('/urls/{id}/checks', function (Request $request, Response $response, 
 
     if (is_null($url)) {
         $this->get('flash')->addMessage('error', 'URL не найден');
-        return $response
-            ->withHeader('Location', $router->urlFor('urls.index'))
-            ->withStatus(302);
+        return redirect($response, $router, 'urls.index');
     }
 
     $analyzer = $this->get(PageAnalyzer::class);
@@ -197,9 +191,7 @@ $app->post('/urls/{id}/checks', function (Request $request, Response $response, 
 
     if ($checkData->hasError() && $checkData->getStatusCode() === null) {
         $this->get('flash')->addMessage('error', 'Произошла ошибка при проверке, не удалось подключиться');
-        return $response
-            ->withHeader('Location', $router->urlFor('urls.show', ['id' => $id]))
-            ->withStatus(302);
+        return redirect($response, $router, 'urls.show', ['id' => $id]);
     }
 
     $check = UrlCheck::fromArrayAndUrlId($checkData->toArray(), $url->getId());
@@ -209,10 +201,7 @@ $app->post('/urls/{id}/checks', function (Request $request, Response $response, 
     } else {
         $this->get('flash')->addMessage('success', 'Страница успешно проверена');
     }
-
-    return $response
-        ->withHeader('Location', $router->urlFor('urls.show', ['id' => $id]))
-        ->withStatus(302);
+    return redirect($response, $router, 'urls.show', ['id' => $id]);
 })->setName('checks.store');
 
 $app->run();
