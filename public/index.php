@@ -144,11 +144,11 @@ $app->post('/urls', function (Request $request, Response $response) use ($router
             $this->get('flash')->addMessage('success', 'Страница успешно добавлена');
         } catch (\RuntimeException $e) {
             $this->get('flash')->addMessage('error', 'Ошибка при сохранении.');
-            return redirect($response, $router, 'home');
+            return \App\redirect($response, $router, 'home');
         }
     }
 
-    return redirect($response, $router, 'urls.show', ['id' => $url->getId()]);
+    return \App\redirect($response, $router, 'urls.show', ['id' => $url->getId()]);
 })->setName('urls.store');
 
 $app->get('/urls/{id}', function (Request $request, Response $response, $args) {
@@ -183,7 +183,7 @@ $app->post('/urls/{id}/checks', function (Request $request, Response $response, 
 
     if (is_null($url)) {
         $this->get('flash')->addMessage('error', 'URL не найден');
-        return redirect($response, $router, 'urls.index');
+        return \App\redirect($response, $router, 'urls.index');
     }
 
     $analyzer = $this->get(PageAnalyzer::class);
@@ -191,7 +191,7 @@ $app->post('/urls/{id}/checks', function (Request $request, Response $response, 
 
     if ($checkData->hasError() && $checkData->getStatusCode() === null) {
         $this->get('flash')->addMessage('error', 'Произошла ошибка при проверке, не удалось подключиться');
-        return redirect($response, $router, 'urls.show', ['id' => $id]);
+        return \App\redirect($response, $router, 'urls.show', ['id' => $id]);
     }
 
     $check = UrlCheck::fromArrayAndUrlId($checkData->toArray(), $url->getId());
@@ -201,7 +201,7 @@ $app->post('/urls/{id}/checks', function (Request $request, Response $response, 
     } else {
         $this->get('flash')->addMessage('success', 'Страница успешно проверена');
     }
-    return redirect($response, $router, 'urls.show', ['id' => $id]);
+    return \App\redirect($response, $router, 'urls.show', ['id' => $id]);
 })->setName('checks.store');
 
 $app->run();
