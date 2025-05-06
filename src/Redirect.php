@@ -3,11 +3,11 @@
 namespace App;
 
 use Psr\Http\Message\ResponseInterface;
-use Slim\Routing\RouteParser;
+use Slim\Interfaces\RouteParserInterface;
 
 function redirect(
     ResponseInterface $response,
-    RouteParser $router,
+    RouteParserInterface $router,
     string $routeName,
     array $params = []
 ): ResponseInterface {
