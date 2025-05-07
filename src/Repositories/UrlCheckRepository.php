@@ -14,7 +14,7 @@ class UrlCheckRepository
         $this->pdo = $pdo;
     }
 
-    public function getChecks(int $urlId, int $limit = 0): array
+    public function getChecks(int $urlId): array
     {
         $checks = [];
         $sql = "SELECT * FROM url_checks WHERE url_id = ? ORDER BY created_at DESC";

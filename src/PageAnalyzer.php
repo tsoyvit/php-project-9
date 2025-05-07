@@ -19,6 +19,40 @@ class PageAnalyzer
         $this->parse = $parse;
     }
 
+//    public function analyze(string $url): PageCheckResult
+//    {
+//        try {
+//            $response = $this->client->request('GET', $url);
+//            $html = (string)$response->getBody();
+//            $parsed = $this->parse->parse($html);
+//
+//            return new PageCheckResult(
+//                statusCode: $response->getStatusCode(),
+//                h1: $parsed['h1'],
+//                title: $parsed['title'],
+//                description: $parsed['description']
+//            );
+//        } catch (ConnectException $e) {
+//            return new PageCheckResult(error: $e->getMessage());
+//        } catch (RequestException $e) {
+//            $response = $e->getResponse();
+//            if ($response !== null) {
+//                $html = (string)$response->getBody();
+//                $parsed = $this->parse->parse($html);
+//
+//                return new PageCheckResult(
+//                    statusCode: $response->getStatusCode(),
+//                    h1: $parsed['h1'],
+//                    title: $parsed['title'],
+//                    description: $parsed['description'],
+//                    error: $e->getMessage()
+//                );
+//            }
+//            return new PageCheckResult(error: $e->getMessage());
+//        } catch (GuzzleException $e) {
+//            return new PageCheckResult(error: $e->getMessage());
+//        }
+//    }
     public function analyze(string $url): PageCheckResult
     {
         try {
@@ -32,11 +66,10 @@ class PageAnalyzer
                 title: $parsed['title'],
                 description: $parsed['description']
             );
-        } catch (ConnectException $e) {
-            return new PageCheckResult(error: $e->getMessage());
-        } catch (RequestException $e) {
-            $response = $e->getResponse();
-            if ($response !== null) {
+        } catch (RequestException | ConnectException | GuzzleException $e) {
+            $response = $e instanceof RequestException ? $e->getResponse() : null;
+
+            if ($response) {
                 $html = (string)$response->getBody();
                 $parsed = $this->parse->parse($html);
 
@@ -48,8 +81,7 @@ class PageAnalyzer
                     error: $e->getMessage()
                 );
             }
-            return new PageCheckResult(error: $e->getMessage());
-        } catch (GuzzleException $e) {
+
             return new PageCheckResult(error: $e->getMessage());
         }
     }
