@@ -16,8 +16,8 @@ use App\Validators\UrlValidator;
 use DI\Container;
 use Dotenv\Dotenv;
 use GuzzleHttp\Client;
-use Psr\Http\Message\ResponseInterface as Response;
-use Psr\Http\Message\ServerRequestInterface as Request;
+use Psr\Http\Message\ResponseInterface;
+use Psr\Http\Message\ServerRequestInterface;
 use Slim\Factory\AppFactory;
 use Slim\Middleware\MethodOverrideMiddleware;
 
@@ -95,7 +95,7 @@ $app->addErrorMiddleware(true, true, true);
 
 $router = $app->getRouteCollector()->getRouteParser();
 
-$app->get('/', function (Request $request, Response $response) {
+$app->get('/', function ($request, $response) {
     $messages = $this->get('flash')->getMessages();
     $params = [
         'flash' => $messages,
@@ -103,7 +103,7 @@ $app->get('/', function (Request $request, Response $response) {
     return $this->get('renderer')->render($response, 'home.phtml', $params);
 })->setName('home');
 
-$app->get('/urls', function (Request $request, Response $response) {
+$app->get('/urls', function ($request, $response) {
     $urlRepo = $this->get(UrlRepository::class);
     $urls = $urlRepo->getUrls();
     $messages = $this->get('flash')->getMessages();
@@ -118,7 +118,7 @@ $app->get('/urls', function (Request $request, Response $response) {
     return $this->get('renderer')->render($response, 'urls/urls.phtml', $params);
 })->setName('urls.index');
 
-$app->post('/urls', function (Request $request, Response $response) use ($router) {
+$app->post('/urls', function ($request, $response) use ($router) {
     $urlRepo = $this->get(UrlRepository::class);
     $urlData = (array)$request->getParsedBody();
     $urlName = $urlData['url']['name'] ?? null;
@@ -135,7 +135,7 @@ $app->post('/urls', function (Request $request, Response $response) use ($router
 
     if ($url = $urlRepo->existsByName($normalizeUrl)) {
         $this->get('flash')->addMessage('success', 'Страница уже существует');
-        return $response->withRedirect($router->urlFor('urls.show', ['id' => $url->getId()]), 302);
+        return \App\redirect($response, $router, 'urls.show', ['id' => $url->getId()]);
     }
 
     $url = Url::fromArray(['name' => $normalizeUrl]);
@@ -144,13 +144,13 @@ $app->post('/urls', function (Request $request, Response $response) use ($router
         $this->get('flash')->addMessage('success', 'Страница успешно добавлена');
     } catch (\RuntimeException $e) {
         $this->get('flash')->addMessage('error', 'Ошибка при сохранении.');
-        return $response->withRedirect($router->urlFor('home'), 302);
+        return \App\redirect($response, $router, 'home');
     }
 
-    return $response->withRedirect($router->urlFor('urls.show', ['id' => $url->getId()]), 302);
+    return \App\redirect($response, $router, 'urls.show', ['id' => $url->getId()]);
 })->setName('urls.store');
 
-$app->get('/urls/{id}', function (Request $request, Response $response, $args) {
+$app->get('/urls/{id}', function ($request, $response, $args) {
     $urlRepo = $this->get(UrlRepository::class);
     $id = $args['id'];
     $url = $urlRepo->getUrlById($id);
@@ -172,7 +172,7 @@ $app->get('/urls/{id}', function (Request $request, Response $response, $args) {
     return $this->get('renderer')->render($response, 'urls/show.phtml', $params);
 })->setName('urls.show');
 
-$app->post('/urls/{id}/checks', function (Request $request, Response $response, $args) use ($router) {
+$app->post('/urls/{id}/checks', function ($request, $response, $args) use ($router) {
     $id = $args['id'];
 
     $urlRepo = $this->get(UrlRepository::class);
@@ -182,7 +182,7 @@ $app->post('/urls/{id}/checks', function (Request $request, Response $response, 
 
     if (is_null($url)) {
         $this->get('flash')->addMessage('error', 'URL не найден');
-        return $response->withRedirect($router->urlFor('urls.index'), 302);
+        return \App\redirect($response, $router, 'urls.index');
     }
 
     $analyzer = $this->get(PageAnalyzer::class);
@@ -190,7 +190,7 @@ $app->post('/urls/{id}/checks', function (Request $request, Response $response, 
 
     if ($checkData->hasError() && $checkData->getStatusCode() === null) {
         $this->get('flash')->addMessage('error', 'Произошла ошибка при проверке, не удалось подключиться');
-        return $response->withRedirect($router->urlFor('urls.show', ['id' => $id]), 302);
+        return \App\redirect($response, $router, 'urls.show', ['id' => $id]);
     }
 
     $check = new UrlCheck(
@@ -205,7 +205,7 @@ $app->post('/urls/{id}/checks', function (Request $request, Response $response, 
         $checkRepo->createCheck($check);
     } catch (\RuntimeException $e) {
         $this->get('flash')->addMessage('error', 'Ошибка при сохранении.');
-        return $response->withRedirect($router->urlFor('urls.show', ['id' => $id]), 302);
+        return \App\redirect($response, $router, 'urls.show', ['id' => $id]);
     }
 
     if ($checkData->hasError()) {
@@ -213,11 +213,10 @@ $app->post('/urls/{id}/checks', function (Request $request, Response $response, 
     } else {
         $this->get('flash')->addMessage('success', 'Страница успешно проверена');
     }
-
-    return $response->withRedirect($router->urlFor('urls.show', ['id' => $id]), 302);
+    return \App\redirect($response, $router, 'urls.show', ['id' => $id]);
 })->setName('checks.store');
 
-$app->map(['GET', 'POST', 'PUT', 'DELETE', 'PATCH'], '/{routes:.+}', function (Request $request, Response $response) {
+$app->map(['GET', 'POST', 'PUT', 'DELETE', 'PATCH'], '/{routes:.+}', function ($request, $response) {
     return $this->get('renderer')->render($response->withStatus(404), '404.phtml', []);
 });
 

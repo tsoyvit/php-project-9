@@ -18,14 +18,10 @@ class UrlCheckRepository
     {
         $checks = [];
         $sql = "SELECT * FROM url_checks WHERE url_id = ? ORDER BY created_at DESC";
-        if ($limit > 0) {
-            $sql .= " LIMIT ?";
-            $stmt = $this->pdo->prepare($sql);
-            $stmt->execute([$urlId, $limit]);
-        } else {
-            $stmt = $this->pdo->prepare($sql);
-            $stmt->execute([$urlId]);
-        }
+
+        $stmt = $this->pdo->prepare($sql);
+        $stmt->execute([$urlId]);
+
         while ($row = $stmt->fetch()) {
             $check = new UrlCheck(
                 urlId: $row['url_id'],
